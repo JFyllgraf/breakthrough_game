@@ -1,0 +1,381 @@
+<!-- Template for Broker based Breakthrough Exercise.
+
+   This source code is from the book 
+     "Flexible, Reliable Software:
+       Using Patterns and Agile Development"
+     published by CRC Press.
+   Author: 
+     Henrik B Christensen 
+     Department of Computer Science
+     Aarhus University
+   
+   Please visit http://www.baerbak.com/ for further information.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+ 
+       http://www.apache.org/licenses/LICENSE-2.0
+ 
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+-->
+<project name="breakthrough" default="help" basedir="."
+	 xmlns:ivy="antlib:org.apache.ivy.ant"
+         xmlns:jacoco="antlib:org.jacoco.ant">
+
+  <!-- Properties for exercise code base -->
+  <property name="src.dir" value="src" />  
+  <property name="test.dir" value="test" />
+
+  <property name="lib.dir" value="lib" />
+  <property name="build.dir" value="build" />
+
+  <property name="resource.dir" value="resource" />
+  <property name="javadoc.dir" value="javadoc" />
+
+  <property name="test.output.directory" value="TEST-RESULT"/>
+
+  <!-- Properties for the frs.broker library -->
+  <property name="src.lib.dir" value="src-lib" />  
+  <property name="build.lib.dir" value="build-lib" />
+  <property name="javadoc.lib.dir" value="javadoc-lib" />
+
+  <property name="frs.broker.jar.name" value="frs-broker-sources.jar" />
+  <property name="frs.broker.javadoc.jar.name" value="frs-broker-javadoc.jar" />
+
+  <!-- paths used for compilation and run  -->
+  <path id="lib.path.id">
+    <fileset dir="${lib.dir}" />
+  </path>
+
+  <path id="run.path.id">
+    <path refid="lib.path.id" />
+    <path location="${build.dir}" />
+  </path>
+
+  <!-- JaCoCo Coverage analysis. Rather unfortunate hard binding to
+       the ivy.xml file here...-->
+  <taskdef uri="antlib:org.jacoco.ant" 
+	   resource="org/jacoco/ant/antlib.xml">
+    <classpath>
+      <pathelement location="lib/org.jacoco.ant-0.7.9.jar"/>
+      <pathelement location="lib/org.jacoco.core-0.7.9.jar"/>
+      <pathelement location="lib/org.jacoco.report-0.7.9.jar"/>
+      <pathelement location="lib/org.jacoco.agent-0.7.9.jar"/>
+      <pathelement location="lib/asm-debug-all-5.2.jar"/>
+    </classpath>
+  </taskdef>
+  <property name="jacoco.report.dir" value="${test.output.directory}/report" />
+  <property name="jacoco.exec" value="${test.output.directory}/jacoco.exec" />
+  
+  <target name="help">
+    <echo>
+Breakthrough project - Implementing Distribution using Broker and REST
+  Targets 
+    clean:     Removes all bytecode.
+    test:      Run JUnit test cases.
+    coverage:  Generate JaCoCo coverage for production code
+    jar.lib:   Generate the frs.broker source and javadoc jar files
+
+  === Execution (Local) ===
+
+    clientLocal:
+      Start a breaktrough client which is bound to Servant
+      instance directly (no distribution and just a single client)
+      
+  === Execution (Socket) ===
+    	
+    serverSocket:
+      Start the breakthrough socket based server 
+    
+    clientSocket:
+      Start one breakthrough client
+
+      To set the host of the server, use '-Dhost=(hostname)', example:
+        ant clientSocket -Dhost=192.168.237.146
+
+  === Execution (REST) ===
+    	
+    serverRest:
+      Start the breakthrough REST based server 
+    
+    clientRest:
+      Start one breakthrough client; for any two clients,
+      the first must CREATE a game, the next JOIN it.
+       ant clientRest -Dop=create -Dhost=(hostname)
+       ant clientRest -Dop=join -Dlocation=(location)
+    </echo>
+  </target>
+  
+  <!-- House holding -->
+  <target name="clean">
+    <delete dir="${build.dir}"/>
+    <delete dir="${build.lib.dir}"/>
+    <delete dir="${lib.dir}"/>
+    <delete dir="${test.output.directory}"/>
+    <delete dir="${javadoc.dir}"/>
+    <delete dir="${javadoc.lib.dir}"/>
+  </target>
+  
+  <target name="prepare">
+    <mkdir dir="${build.dir}"/>
+    <mkdir dir="${build.lib.dir}"/>
+    <mkdir dir="${lib.dir}"/>
+    <mkdir dir="${test.output.directory}"/>
+    <mkdir dir="${javadoc.dir}"/>
+    <mkdir dir="${javadoc.lib.dir}"/>
+  </target>
+  
+  <!-- Ivy dependency management -->
+  <target name="resolve" 
+	  description="--> retreive dependencies with ivy">
+    <ivy:retrieve/>
+  </target>    
+  
+  <target name="report" depends="resolve" 
+	  description="--> generates a report of dependencies">
+    <ivy:report todir="${build.dir}"/>
+  </target>
+  
+  <!-- ====================================== -->
+  <!-- Handle building the frs.broker library -->
+  <!-- ====================================== -->
+
+  <!-- Perform an up-to-date check so we know if
+       we need to recompile the frs.broker library -->
+  <target name="lib.update.check">
+    <uptodate property="build.lib.not.required"
+              targetfile="${lib.dir}/${frs.broker.jar.name}">
+      <srcfiles dir="${src.lib.dir}">
+        <include name="**/*.java"/>
+      </srcfiles>
+    </uptodate>
+  </target>
+
+  <!-- Compile the library -->
+  <target name="build.src.lib"
+          depends="prepare,resolve,lib.update.check"
+          unless="build.lib.not.required">
+    <javac srcdir="${src.lib.dir}"
+	   destdir="${build.lib.dir}"
+	   debug="on" 
+	   classpathref="lib.path.id" 
+	   includeAntRuntime="false">
+    </javac>
+  </target>
+  
+  <!-- JavaDoc for library -->
+  <target name="javadoc.lib" depends="build.src.lib"
+          unless="build.lib.not.required">
+    <javadoc
+        source = "1.8"
+        packagenames= "frs.broker.*"
+        sourcepath="${src.lib.dir}"
+        destdir="${javadoc.lib.dir}"
+        package="true"
+        doctitle="&lt;b&gt;frs.broker package&lt;/b&gt;"
+       bottom="Henrik Baerbak Christensen, Aarhus University, Denmark"
+       windowtitle="Broker Common Library: frs.broker">
+      <sourcepath>
+	<path location="${src.lib.dir}"/>
+      </sourcepath>
+      <classpath>
+	<path refid="run.path.id"/>
+      </classpath>
+    </javadoc>
+    <echo message="Javadoc is in folder: ${javadoc.lib.dir}."/>
+  </target>
+
+  <!-- Create the library jar file, put it directly in lib folder --> 
+  <target name="jar.lib" depends="javadoc.lib"
+          unless="build.lib.not.required">
+    <jar jarfile="${lib.dir}/${frs.broker.jar.name}"
+         basedir="${build.lib.dir}"/>
+    <jar jarfile="${lib.dir}/${frs.broker.javadoc.jar.name}"
+         basedir="${javadoc.lib.dir}"/>
+  </target>
+
+  
+  <!-- ====================================== -->
+  <!-- Handle the exercise tasks              -->
+  <!-- ====================================== -->
+
+  <!-- Note that this build is a two phase build;
+       first the frs.broker library is built and
+       put into the 'lib' folder along with all
+       libraries downloaded by Ivy. Next the
+       'src' and 'test' folders are built. -->
+  
+  <!-- Compilation tasks -->
+  <target name="build.src" depends="prepare,resolve,jar.lib">
+    <javac srcdir="${src.dir}"
+	   destdir="${build.dir}"
+	   debug="on" 
+	   classpathref="lib.path.id" 
+	   includeAntRuntime="false">
+    </javac>
+  </target>
+
+  <target name="build.test" depends="build.src">
+    <javac srcdir="${test.dir}"
+	   destdir="${build.dir}"
+	   debug="on" 
+	   classpathref="lib.path.id" 
+	   includeAntRuntime="false">
+    </javac>
+  </target>
+
+  <!-- Resources to be put into their proper place -->
+  <target name="copy.resource">
+    <!-- na -->
+  </target>
+  
+  <!-- Build everything -->
+  <target name="build.all" 
+	  depends="build.test,copy.resource"
+          description="--> Build everything"/>
+
+  <!-- Java Doc generation -->
+  <target name="javadoc" depends="build.src"
+	  description="--> Generate javadoc in folder ${javadoc.dir}">
+    <javadoc
+       source = "1.8"
+       packagenames=
+       "template.*"
+       sourcepath="${src.dir}"
+       destdir="${javadoc.dir}"
+       package="true"
+       doctitle="&lt;b&gt;Template&lt;/b&gt;"
+       bottom="Henrik Baerbak Christensen, Aarhus University, Denmark"
+       windowtitle="Breakthrough exercise">
+      <sourcepath>
+	<path location="${src.dir}"/>
+      </sourcepath>
+      <classpath>
+	<path refid="run.path.id"/>
+      </classpath>
+    </javadoc>
+    <echo message="Javadoc is in folder: ${javadoc.dir}."/>
+  </target>
+
+  <!-- JUnit testing -->
+  <target name="test"  depends="build.all"
+          description="--> Run JUnit unit and integration tests">
+    <junit printsummary="yes" fork="yes" 
+	   forkmode="once"
+	   haltonfailure="yes">
+      <formatter type="plain"/>
+      <batchtest fork="yes" todir="${test.output.directory}">
+	<fileset dir="${test.dir}">
+	  <include name="**/Test*.java"/>
+	</fileset>
+      </batchtest>
+      <classpath refid="run.path.id"/>
+    </junit>
+  </target>
+
+    <!-- Run JUnit with JaCoCo code coverage -->
+  <target name="run.junit" depends="build.all">
+    <jacoco:coverage destfile="${jacoco.exec}" >
+      <junit printsummary="yes" fork="yes" 
+	     forkmode="once"
+	     haltonfailure="yes">
+	<formatter type="plain"/>
+	<batchtest fork="yes" todir="${test.output.directory}">
+	  <fileset dir="test">
+	    <include name="**/*Test*.java"/>
+	  </fileset>
+	</batchtest>
+	<classpath refid="run.path.id"/>
+      </junit>
+    </jacoco:coverage>
+  </target>
+
+  <target name="coverage" depends="run.junit"
+	  description="--> Generate code coverage report (production code)">
+    <jacoco:report>
+      <executiondata>
+        <file file="${jacoco.exec}"/>
+      </executiondata>
+      <structure name="Breakthrough Test" >
+        <classfiles>
+          <fileset dir="${build.dir}">
+	    <include name="**/*.class"/>
+	  </fileset>
+        </classfiles>
+        <sourcefiles encoding="UTF-8" tabwidth="2">
+	  <fileset dir="${src.dir}"/>
+	  <fileset dir="${test.dir}"/>
+        </sourcefiles>
+      </structure>
+      <html destdir="${jacoco.report.dir}"/>
+    </jacoco:report>
+    <echo message="To see report, browse to index.html at ${jacoco.report.dir}."/>
+  </target>
+
+
+  <!-- Execution Targets ================================ -->
+
+  <!-- Default values for client parameters -->
+
+  <!-- DNS/IP of the host which runs the server -->
+  <property name="host" value="localhost"/>
+
+  <!-- Execution / Local and Servant based -->
+  <target name="clientLocal"  depends="build.all"
+          description="--> Execute client (Socket)">
+    <java classname="breakthrough.main.ClientMainLocal"
+          fork="yes"
+          classpathref="run.path.id">
+    </java>
+  </target>
+  
+  <!-- Execution / Socket based -->
+  
+  <target name="serverSocket"  depends="build.all"
+          description="--> Run socket based breakthrough server">
+    <java classname="breakthrough.main.ServerMainSocket" 
+	  fork="yes"
+	  classpathref="run.path.id">
+    </java>
+  </target>
+
+  <target name="clientSocket"  depends="build.all"
+          description="--> Execute client (Socket)">
+    <java classname="breakthrough.main.ClientMainSocket"
+          fork="yes"
+          classpathref="run.path.id">
+      <arg value="${host}"/>
+    </java>
+  </target>
+
+  <!-- Execution / REST based -->
+  
+  <target name="serverRest"  depends="build.all"
+          description="--> Run REST based breakthrough server">
+    <java classname="breakthrough.main.ServerMainREST" 
+	  fork="yes"
+	  classpathref="run.path.id">
+    </java>
+  </target>
+
+  <property name="op" value="notset"/>
+  <property name="location" value="notset"/>
+
+  <target name="clientRest"  depends="build.all"
+          description="--> Execute client (REST)">
+    <java classname="breakthrough.main.ClientMainREST"
+          fork="yes"
+          classpathref="run.path.id">
+      <arg value="${host}"/>
+      <arg value="${op}"/>
+      <arg value="${location}"/>
+    </java>
+  </target>
+
+</project>
