@@ -6,8 +6,8 @@ package frs.broker;
  * choice of library/framework for inter-process communication (IPC).
  * <p>
  * Responsibility: To define a specific IPC protocol and listen to any incoming
- * network messages, and forward them to an associated Invoker instance, and
- * return any ReplyObjects from the Invoker to reply messages on the network.
+ * network messages, and forward them to an associated InvokerImpl instance, and
+ * return any ReplyObjects from the InvokerImpl to reply messages on the network.
  * It is associated with a ClientRequestHandler on the client side of the
  * network.
  * <p>

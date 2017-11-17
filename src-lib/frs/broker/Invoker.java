@@ -1,7 +1,7 @@
 package frs.broker;
 
 /**
- * The Invoker role in the Broker Pattern.
+ * The InvokerImpl role in the Broker Pattern.
  * It is responsible for demarshalling the request
  * from the client, invoke the proper method on the proper Servant(s), and return a
  * reply object that encapsulates the result of the method call.

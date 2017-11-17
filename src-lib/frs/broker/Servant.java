@@ -7,6 +7,6 @@ package frs.broker;
  * <p>
  * Responsibility: To define the domain implementation on the server side
  * of a role which may be invoked from a remote client. It is called
- * from the Invoker.
+ * from the InvokerImpl.
  */
 public interface Servant {}
