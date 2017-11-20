@@ -1,9 +1,6 @@
 package breakthrough.marshall;
 
-import breakthrough.domain.BTNames;
-import breakthrough.domain.Breakthrough;
-import breakthrough.domain.Color;
-import breakthrough.domain.Position;
+import breakthrough.domain.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
@@ -49,6 +46,13 @@ public class InvokerImpl implements frs.broker.Invoker {
 
             reply = new ReplyObject(HttpServletResponse.SC_OK,
                     gson.toJson(piece));
+
+        }else if (operationName.equals(BTNames.MOVE)){
+            Move move = gson.fromJson(array.get(0), Move.class);
+            Boolean canMove = breakthrough.move(move);
+
+            reply = new ReplyObject(HttpServletResponse.SC_OK,
+                    gson.toJson(canMove));
         }
 
         else {

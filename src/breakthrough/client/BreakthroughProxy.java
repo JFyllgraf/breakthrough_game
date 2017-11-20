@@ -35,7 +35,10 @@ public class BreakthroughProxy implements Breakthrough, ClientProxy {
 
     @Override
     public boolean move(Move move) {
-        boolean canMove = requestor.sendRequestAndAwaitReply(BTNames.OID, BTNames.MOVE, boolean.class);
+        Boolean canMove = requestor.sendRequestAndAwaitReply(BTNames.OID, BTNames.MOVE, Boolean.class, move);
+        if (canMove == null){
+            return false;
+        }
         return canMove;
     }
 }

@@ -19,12 +19,10 @@ public class ClientMainSocket {
 
   public ClientMainSocket(String host, int port) {
     // Create the game
-    Breakthrough game = null;
 
     ClientRequestHandler clientRequestHandler = new SocketClientRequestHandler(host, port);
     Requestor requestor = new StandardJSONRequestor(clientRequestHandler);
-
-    Breakthrough breakthrough = new BreakthroughProxy(requestor);
+    Breakthrough game = new BreakthroughProxy(requestor);
 
     // TODO: Fill in the code to solve the exercise
 
