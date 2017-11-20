@@ -1,49 +1,79 @@
 package brokerTests;
 
+import breakthrough.client.BreakthroughProxy;
 import breakthrough.domain.*;
 import breakthrough.marshall.InvokerImpl;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonParser;
+import doubles.LocalMethodCallClientRequestHandler;
 import frs.broker.Invoker;
 import frs.broker.ReplyObject;
-import org.junit.*;
+import frs.broker.Servant;
+import frs.broker.marshall.json.StandardJSONRequestor;
+import org.junit.Before;
+import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
 
 public class TestInvoker {
+
+    Breakthrough clientProxy;
+    StandardJSONRequestor requestor;
+    LocalMethodCallClientRequestHandler handler;
     Invoker invoker;
-    Breakthrough breakthrough;
+    StubServant servant;
+
+    Move moveStub;
 
     @Before
     public void setup(){
-        breakthrough = new BreakthroughSurrogate();
-        invoker = new InvokerImpl(breakthrough);
+        servant = new StubServant();
+        invoker = new InvokerImpl(servant);
+        handler = new LocalMethodCallClientRequestHandler(invoker);
+        requestor = new StandardJSONRequestor(handler);
+        clientProxy = new BreakthroughProxy(requestor);
+
+        moveStub = new Move(new Position(2,2), new Position(2,3));
     }
 
     @Test
-    public void shouldReturnBlackForBreakthroughTestStubGetWinner(){
-        ReplyObject reply = invoker.handleRequest(BTNames.OID, BTNames.GET_WINNER, "[]");
-        assertThat(reply.getPayload(), is("\"BLACK\""));
+    public void shouldBeBlackForTestStubGetWinner(){
+        assertThat(clientProxy.getWinner(), is(Color.BLACK));
     }
 
     @Test
-    public void shouldReturnWhiteForBreakthroughTestStubGetPlayerInTurn(){
-        ReplyObject reply = invoker.handleRequest(BTNames.OID, BTNames.GET_PLAYER_IN_TURN, "[]");
-        assertThat(reply.getPayload(), is("\"WHITE\""));
+    public void shouldReturnWhiteForTestStubGetPlayerInTurn(){
+        assertThat(clientProxy.getPlayerInTurn(), is(Color.WHITE));
     }
 
     @Test
-    public void shouldReturnBlackForBreakthroughTestStubGetPieceAt(){
-        ReplyObject reply = invoker.handleRequest(BTNames.OID, BTNames.GET_PIECE_AT,  "[]");
-        assertThat(reply.getPayload(), is(""));
-        assertThat(reply.getStatusCode(), is("SC_OK"));
+    public void shouldBeBlackForTestStubGetPieceAt(){
+        assertThat(clientProxy.getPieceAt(new Position(1,1)), is(Color.BLACK));
     }
 
-    public class StubBreakthrough implements Breakthrough{
+    @Test
+    public void shouldReturnCorrectPositionParameterForTestStubGetPieceAt(){
+        clientProxy.getPieceAt(new Position(1,1));
+        assertThat(servant.position.toString(), is("Position{row=1, column=1}"));
+    }
+
+    @Test
+    public void shouldReturnCorrectMoveParameterForTestStubMove(){
+        clientProxy.move(moveStub);
+        assertThat(servant.move.toString(), is(moveStub.toString()));
+    }
+
+    @Test
+    public void shouldReturnTrueForTestStubMove(){
+       assertThat(clientProxy.move(moveStub), is(true));
+    }
+
+    private class StubServant implements Breakthrough, Servant{
+
+        private Position position;
+        private Move move;
 
         @Override
         public Color getPieceAt(Position p) {
+            position = p;
             return Color.BLACK;
         }
 
@@ -59,7 +89,8 @@ public class TestInvoker {
 
         @Override
         public boolean move(Move move) {
-            return false;
+            this. move = move;
+            return true;
         }
     }
 
