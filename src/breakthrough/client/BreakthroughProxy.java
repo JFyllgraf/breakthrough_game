@@ -17,12 +17,14 @@ public class BreakthroughProxy implements Breakthrough, ClientProxy {
 
     @Override
     public Color getPieceAt(Position p) {
-        return null;
+        Color piece = requestor.sendRequestAndAwaitReply(BTNames.OID, BTNames.GET_PIECE_AT, Color.class, p);
+        return piece;
     }
 
     @Override
     public Color getPlayerInTurn() {
-        return null;
+        Color playerInTurn = requestor.sendRequestAndAwaitReply(BTNames.OID, BTNames.GET_PLAYER_IN_TURN, Color.class);
+        return playerInTurn;
     }
 
     @Override
@@ -33,6 +35,7 @@ public class BreakthroughProxy implements Breakthrough, ClientProxy {
 
     @Override
     public boolean move(Move move) {
-        return false;
+        boolean canMove = requestor.sendRequestAndAwaitReply(BTNames.OID, BTNames.MOVE, boolean.class);
+        return canMove;
     }
 }

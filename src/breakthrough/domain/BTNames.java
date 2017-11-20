@@ -10,4 +10,7 @@ public class BTNames {
 
     //operation names
     public static final String GET_WINNER = "get winner";
+    public static final String GET_PLAYER_IN_TURN = "get player in turn";
+    public static final String GET_PIECE_AT = "get piece at";
+    public static final String MOVE = "move";
 }

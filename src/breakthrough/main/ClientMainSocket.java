@@ -1,6 +1,8 @@
 package breakthrough.main;
 
+import breakthrough.client.BreakthroughProxy;
 import breakthrough.domain.Breakthrough;
+import breakthrough.domain.BreakthroughSurrogate;
 import breakthrough.ui.ClientInterpreter;
 import frs.broker.ClientRequestHandler;
 import frs.broker.Requestor;
@@ -19,6 +21,11 @@ public class ClientMainSocket {
     // Create the game
     Breakthrough game = null;
 
+    ClientRequestHandler clientRequestHandler = new SocketClientRequestHandler(host, port);
+    Requestor requestor = new StandardJSONRequestor(clientRequestHandler);
+
+    Breakthrough breakthrough = new BreakthroughProxy(requestor);
+
     // TODO: Fill in the code to solve the exercise
 
     // Welcome
@@ -31,3 +38,4 @@ public class ClientMainSocket {
     interpreter.readEvalLoop();
   }
 }
+

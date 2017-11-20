@@ -3,6 +3,7 @@ package breakthrough.marshall;
 import breakthrough.domain.BTNames;
 import breakthrough.domain.Breakthrough;
 import breakthrough.domain.Color;
+import breakthrough.domain.Position;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
@@ -31,20 +32,28 @@ public class InvokerImpl implements frs.broker.Invoker {
         JsonParser parser = new JsonParser();
         JsonArray array = parser.parse(payload).getAsJsonArray();
 
-        try {
-            if (operationName.equals(BTNames.GET_WINNER)) {
-                Color winner = breakthrough.getWinner();
-                reply = new ReplyObject(HttpServletResponse.SC_OK,
-                        gson.toJson(winner));
-            } else {
-                reply = new ReplyObject(HttpServletResponse.SC_NOT_IMPLEMENTED,
-                        "Unknown operation name: " + operationName);
-            }
 
-        } catch (Exception e) {
-            reply = new ReplyObject(
-                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                    e.getMessage());
+        if (operationName.equals(BTNames.GET_WINNER)) {
+            Color winner = breakthrough.getWinner();
+            reply = new ReplyObject(HttpServletResponse.SC_OK,
+                    gson.toJson(winner));
+
+        } else if (operationName.equals(BTNames.GET_PLAYER_IN_TURN)){
+            Color playerInTurn = breakthrough.getPlayerInTurn();
+            reply = new ReplyObject(HttpServletResponse.SC_OK,
+                    gson.toJson(playerInTurn));
+
+        } else if (operationName.equals(BTNames.GET_PIECE_AT)){
+            Position position = gson.fromJson(array.get(0), Position.class);
+            Color piece = breakthrough.getPieceAt(position);
+
+            reply = new ReplyObject(HttpServletResponse.SC_OK,
+                    gson.toJson(piece));
+        }
+
+        else {
+            reply = new ReplyObject(HttpServletResponse.SC_NOT_IMPLEMENTED,
+                    "Unknown operation name: " + operationName);
         }
         return reply;
     }
