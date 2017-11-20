@@ -320,7 +320,7 @@ Breakthrough project - Implementing Distribution using Broker and REST
 
 
   <!-- Execution Targets ================================ -->
-
+  <!-- Release 9 !-->
   <!-- Default values for client parameters -->
 
   <!-- DNS/IP of the host which runs the server -->
