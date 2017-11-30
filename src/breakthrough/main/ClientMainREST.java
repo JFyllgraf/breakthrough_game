@@ -2,6 +2,7 @@ package breakthrough.main;
 
 import breakthrough.domain.Breakthrough;
 import breakthrough.ui.ClientInterpreter;
+import rest.BreakthroughRESTProxy;
 
 /** Client for breakthrough, using REST.
  */
@@ -20,9 +21,11 @@ public class ClientMainREST {
 
     if (op.equals("create")) {
       // TODO: Create a Breakthrough REST proxy that CREATES a game resource
+      game = new BreakthroughRESTProxy(host, 4567);
     } else {
       // TODO: Create a Breakthrough REST proxy that connects to a
       // game resource on a specific Location
+      game = new BreakthroughRESTProxy(host, 4567, location);
     }
     
     // Start the interpreter

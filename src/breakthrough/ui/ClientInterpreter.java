@@ -111,6 +111,7 @@ public class ClientInterpreter {
     systemOut.println();
     systemOut.println("Next Player: "
             + game.getPlayerInTurn());
+    systemOut.println("Winner: " + game.getWinner());
   }
 
   private void handleMultiArgumentCommand(String token, String[] tokens) {

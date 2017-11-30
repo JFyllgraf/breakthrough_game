@@ -324,7 +324,7 @@ Breakthrough project - Implementing Distribution using Broker and REST
   <!-- Default values for client parameters -->
 
   <!-- DNS/IP of the host which runs the server -->
-  <property name="host" value="10.192.122.67"/>
+  <property name="host" value="localhost"/>
 
   <!-- Execution / Local and Servant based -->
   <target name="clientLocal"  depends="build.all"

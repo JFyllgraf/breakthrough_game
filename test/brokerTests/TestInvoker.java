@@ -5,7 +5,6 @@ import breakthrough.domain.*;
 import breakthrough.marshall.InvokerImpl;
 import doubles.LocalMethodCallClientRequestHandler;
 import frs.broker.Invoker;
-import frs.broker.ReplyObject;
 import frs.broker.Servant;
 import frs.broker.marshall.json.StandardJSONRequestor;
 import org.junit.Before;
